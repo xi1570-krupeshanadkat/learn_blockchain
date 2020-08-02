@@ -1,0 +1,19 @@
+{
+  "name": "blockchain_js",
+  "version": "1.0.0",
+  "description": "Understanding & Creating blockchain from scratch",
+  "main": "index.js",
+  "scripts": {
+    "test": "node dev/test.js",
+    "api": "node dev/api.js",
+    "dev": "nodemon --watch dev -e js dev/api.js"
+  },
+  "author": "Krupesh Anadkat",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "sha256": "^0.2.0",
+    "uuid": "^8.3.0"
+  }
+}
