@@ -1,4 +1,5 @@
 const sha256 = require('sha256');
+const uuid = require('uuid');
 const currentNodeUrl = process.argv[3];
 
 // Blockchain Constructor with Genesis block
@@ -36,9 +37,14 @@ Blockchain.prototype.createNewTransaction = function(amount, sender, recipient) 
   const newTransaction = {
     amount    : amount,
     sender    : sender,
-    recipient : recipient
+    recipient : recipient,
+    transactionId : uuid.v1().split('-').join('')
   };
-  this.pendingTransactions.push(newTransaction);
+  return newTransaction;
+};
+
+Blockchain.prototype.addTransactionToPendingTransactions = function(transactionObj) {
+  this.pendingTransactions.push(transactionObj);
   return this.getLastBlock()['index'] + 1;
 };
 
@@ -60,6 +66,32 @@ Blockchain.prototype.proofOfWork = function(previousBlockHash, currentBlockData)
     hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
   }
   return nonce;
+};
+
+// Consensur Algorithm - Longest Chain Rule
+Blockchain.prototype.chainIsValid = function(blockchain){
+  let validChain = true; 
+  for (let i = 1; i < blockchain.length; i++) {
+    const currentBlock = blockchain[i];
+    const previousBlock = blockchain[i-1];
+    const blockHash = this.hashBlock(
+      previousBlock['hash'],
+      {transactions: currentBlock['transactions'], index: currentBlock['index']},
+      currentBlock['nonce']
+    );
+    if (blockHash.substring(0, 4) !== '0000') validChain = false;
+		if (currentBlock['previousBlockHash'] !== previousBlock['hash']) validChain = false;
+  }
+
+  const genesisBlock = blockchain[0];
+	const correctNonce = genesisBlock['nonce'] === 100;
+	const correctPreviousBlockHash = genesisBlock['previousBlockHash'] === '0';
+	const correctHash = genesisBlock['hash'] === '0';
+	const correctTransactions = genesisBlock['transactions'].length === 0;
+
+	if (!correctNonce || !correctPreviousBlockHash || !correctHash || !correctTransactions) validChain = false;
+
+  return validChain;
 };
 
 

@@ -85,16 +85,33 @@ app.get('/blockchain', function(req, res){
 
 // Post New Transaction in Blockchain
 app.post('/transaction', function(req, res){
-  try {
-    const blockIndex = xeCoin.createNewTransaction(
-      req.body.amount, 
-      req.body.sender, 
-      req.body.recipient
-    );
-    res.json({message : `Success, transaction will be added in block ${blockIndex}`});
-  } catch (error) {
-    res.status(400).json({message : "Bad request, invalid body parameters"})
-  }
+  const newTransaction = req.body;
+  const blockIndex = xeCoin.addTransactionToPendingTransactions(newTransaction);
+  res.json({ note: `Transaction will be added in block ${blockIndex}.`});
+});
+
+// Add New Transaction
+app.post('/transaction/broadcast', function(req, res){
+  const newTransaction = xeCoin.createNewTransaction(
+    req.body.amount, 
+    req.body.sender, 
+    req.body.recipient
+  );
+  xeCoin.addTransactionToPendingTransactions(newTransaction);
+  const requestPromises = [];
+  xeCoin.networkNodes.forEach(networkNode => {
+    const requestOptions = {
+      uri: networkNode + '/transaction',
+      method: 'POST',
+      body: newTransaction,
+      json: true
+    };
+    requestPromises.push(rp(requestOptions));
+  });
+  Promise.all(requestPromises)
+    .then(data => {
+      res.json({ note: 'Transaction created and broadcast successfully.'});
+    });
 });
 
 // Mine New Block
@@ -108,13 +125,58 @@ app.get('/mine', function(req, res){
   const nonce = xeCoin.proofOfWork(previousBlockHash, currentBlockData);
   const blockHash = xeCoin.hashBlock(previousBlockHash, currentBlockData, nonce);
   const newBlock = xeCoin.createNewBlock(nonce, previousBlockHash, blockHash);
-  // Reward Miner from system : "00" as sender in next Mine
-  xeCoin.createNewTransaction(10, "00", nodeAddress);
-  // respond with mined block
-  res.json({
-    message : "New Block Mined Successfully",
-    block : newBlock
+
+  const requestPromises = [];
+  xeCoin.networkNodes.forEach(networkNodeUrl => {
+    const requestOptions = {
+      uri: networkNodeUrl + '/receive-new-block',
+      method: 'POST',
+      body: { newBlock: newBlock },
+      json: true
+    }; 
+    requestPromises.push(rp(requestOptions));
   });
+
+  Promise.all(requestPromises)
+    .then(data => {
+      const requestOptions = {
+        uri: xeCoin.currentNodeUrl + '/transaction/broadcast',
+        method: 'POST',
+        body: {
+          amount: 12.5, 
+          sender:"00", 
+          recipient: nodeAddress
+        },
+        json: true
+      };
+      return rp(requestOptions);
+    })
+    .then(data => {
+      res.json({
+        message : "New Block Mined Successfully",
+        block : newBlock
+      });
+    })
+});
+
+app.post('/receive-new-block', function(req, res) {
+  const newBlock = req.body.newBlock;
+  const lastBlock = xeCoin.getLastBlock();
+  const correctHash = lastBlock.hash === newBlock.previousBlockHash;
+  const correctIndex = newBlock.index === lastBlock.index + 1;
+  if(correctHash && correctIndex) {
+    xeCoin.chain.push(newBlock);
+    xeCoin.pendingTransactions = [];
+    res.json({
+      note: 'New block received and accepted.',
+      newBlock: newBlock
+    });
+  }else{
+    res.json({
+        note:'New block rejected.',
+        newBlock: newBlock
+    });  
+  }
 });
 
 
