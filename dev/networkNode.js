@@ -78,6 +78,48 @@ app.post('/register-nodes-bulk', function (req, res) {
 });
 
 
+// Consensus Algorithm
+app.get('/consensus', function(req, res){
+  const requestPromises =[];
+  xeCoin.networkNodes.forEach(networkNodeUrl => {
+    const requestOptions = {
+      uri: networkNodeUrl + '/blockchain',
+      method: 'GET',
+      json: true 
+    };
+    requestPromises.push(rp(requestOptions));
+  });
+  Promise.all(requestPromises)
+    .then(blockchains => {
+      const currentChainLength = xeCoin.chain.length;
+      let maxChainLength = currentChainLength;
+      let newLongestChain = null;
+      let newPendingTransactions = null;
+      blockchains.forEach(blockchain => {
+        if(blockchain.chain.length > maxChainLength){
+          maxChainLength = blockchain.chain.length;
+          newLongestChain = blockchain.chain;
+          newPendingTransactions = blockchain.pendingTransactions;
+        }
+      });
+      if (!newLongestChain || (newLongestChain && !xeCoin.chainIsValid(newLongestChain))) {
+        res.json({
+          note: 'Current chain has not been replaced.',
+          chain: xeCoin.chain
+        });
+      }
+      else {
+        xeCoin.chain = newLongestChain;
+        xeCoin.pendingTransactions = newPendingTransactions;
+        res.json({
+          note: 'This chain has been replaced.',
+          chain: xeCoin.chain
+        });
+      }
+    });
+});
+
+
 // Get Blockchain
 app.get('/blockchain', function(req, res){
   res.send(xeCoin);
@@ -179,6 +221,35 @@ app.post('/receive-new-block', function(req, res) {
   }
 });
 
+
+// BLOCK EXPLORER ENDPOINTS
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+app.get('/block/:blockHash', function(req, res) { 
+	const blockHash = req.params.blockHash;
+  const correctBlock = xeCoin.getBlock(blockHash);
+	res.json({
+		block: correctBlock
+	});
+});
+
+app.get('/transaction/:transactionId', function(req, res) {
+  const transactionId = req.params.transactionId;
+  const transactionData = xeCoin.getTransaction(transactionId);
+  res.json({
+    transaction: transactionData.transaction,
+    block: transactionData.block
+  });
+});
+
+app.get('/address/:address', function(req, res) {
+  const address = req.params.address;
+  const addressData = xeCoin.getAdressData(address);
+  res.json({ addressData: addressData });
+});
+
+app.get('/block-explorer', function(req, res) {
+  res.sendFile('./block-explorer/index.html', { root: __dirname });
+});
 
 const PORT = process.argv[2];
 
