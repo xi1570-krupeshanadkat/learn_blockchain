@@ -8,7 +8,7 @@
 
 I started with absolutely zero lines of code. I had no idea of what is Blockchain, what excatly is bitcoin (cryptocurrency) what is that buzz "bitcoin mining" is actually? I was really curious to knw all of these. 
 
-After searching lot of tutorials and youtube videos, I finally landed on this book  (https://www.packtpub.com/in/web-development/learn-blockchain-programming-javascript) [**Learn Blockchain Programming with JavaScript by Eric Traub**] He taught things very gradually and explaining each and every line of code, the theory behind it and testing out every single function or API we build while reading book.
+After searching lot of tutorials and youtube videos, I finally landed on this book [Learn Blockchain Programming with JavaScript by Eric Traub](https://www.packtpub.com/in/web-development/learn-blockchain-programming-javascript) He taught things very gradually and explaining each and every line of code, the theory behind it and testing out every single function or API we build while reading book.
 
 I guess even if someone who doesn't have any JS experience would easily follow the book and really get the idea of what is Blockchain, decentralized systems, cryptocurrencies, and testing things you write.
 
