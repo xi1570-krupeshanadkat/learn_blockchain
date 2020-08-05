@@ -3,7 +3,7 @@
 
 ### 🧐 When It All Started
 
-<img align="right" width="230px" src="https://www.packtpub.com/media/catalog/product/cache/4cdce5a811acc0d2926d7f857dceb83b/b/1/b12086.png" alt="Packt ebook">
+<img align="right" width="280px" src="https://www.packtpub.com/media/catalog/product/cache/4cdce5a811acc0d2926d7f857dceb83b/b/1/b12086.png" alt="Packt ebook">
 
 
 I started with absolutely zero lines of code. I had no idea of what is Blockchain, what excatly is bitcoin (cryptocurrency) what is that buzz "bitcoin mining" is actually? I was really curious to knw all of these. 
